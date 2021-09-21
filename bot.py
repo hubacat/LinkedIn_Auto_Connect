@@ -1,4 +1,4 @@
-rom os import getgid
+from os import getgid
 import sys
 import pandas as pd
 from selenium import webdriver
@@ -8,15 +8,20 @@ from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
 from random import random
 
+numberSuccess = 0
+numberUnsuccess = 0
+
 LOGIN_PAGE = 'https://www.linkedin.com/login'
+STEPAUTH_MSG = '\n\n---------------\nComplete POTENTIAL 2-step auth. and press ENTER (if not completed, could cause error).......\n'
+TOTAL_MSG = '\n\n* Total # of SUCCESSFUL connections: ' + str(numberSuccess) + '\n* Total # of UNSUCCESSFUL connections: ' + str(numberUnsuccess) + '\n'
+OUTRO_MSG = '\n\n---------------\nDONE!! View the monitor.txt file for analasis, and verify some random profiles for accuracy.......\n'
 
 # Local references.
 CHROMIUM_DRIVER = './selenium_driver/chromedriver.exe'
 DATA_FILE = 'data.xlsx'
 NAMES_COLUMN = 'NAMES'
 COLUMN_BREAK = 'done'
-SUCCESS_MONITOR = 'successfulConnections.txt'
-UNSUCCESS_MONITOR = 'unsuccessfulConnections.txt'
+MONITOR_FILE = 'monitor.txt'
 
 # Page elements.
 USERNAME_TEXTBOX = 'username'
@@ -28,12 +33,12 @@ MESSAGE_BOX = 'custom-message'
 SEND_NOTE_BUTTON =  'ml1'
 
 # Personalization.
-MSG = ''                       					# <--------------- Personnalized message here
-SCHOOL_NAME = ''                                                # <--------------- School keyword here.
-USERNAME = ''                                                   # <--------------- LinkedIn email or phone here.
-PASSWORD = ''                                                   # <--------------- LinkedIn password here.
+MSG = 'Hello, would you like to connect?'                   # <--------------- Personnalized message here.
+SCHOOL_NAME = ''                                            # <--------------- School keyword here.
+USERNAME = ''                                               # <--------------- LinkedIn email or phone here.
+PASSWORD = ''                                               # <--------------- LinkedIn password here.
 MIN_DELAY = 1
-MAX_DELAY = 5
+MAX_DELAY = 4
 
 def config() :
     browser = webdriver.Chrome(CHROMIUM_DRIVER)
@@ -47,21 +52,20 @@ def config() :
 
     browser.find_element_by_xpath(SIGN_IN_BUTTON).click()
 
-    input('\nComplete POTENTIAL 2-step auth. and press ENTER (if not completed, could cause error).......\n')
+    input(STEPAUTH_MSG)
 
     return browser
 
+# The 'END' note refers to the last timestamp.
 def timeStamp(note) :
-    with open(SUCCESS_MONITOR, 'a') as succesfulConFile:
-        succesfulConFile.write('\n--------------------|' + note + ':     ' + str(datetime.now()) + '     |--------------------\n')
-    succesfulConFile.close()
-    with open(UNSUCCESS_MONITOR, 'a') as unsuccesfulConFile:
-        unsuccesfulConFile.write('\n--------------------|' + note + ':     ' + str(datetime.now()) + '     |--------------------\n')
-    unsuccesfulConFile.close()
+    if note == 'END' : print(TOTAL_MSG)
 
-timeStamp('START')
+    with open(MONITOR_FILE, 'a') as file:
+        file.write('\n--------------------|' + note + ':     ' + str(datetime.now()) + '     |--------------------\n')
+    file.close()
 
 # Setup
+timeStamp('START')
 workbook = pd.read_excel(DATA_FILE)
 workbook.head()
 browser = config()
@@ -94,7 +98,7 @@ for name in names :
     # Searching and attempting to connect to respective name given multiple last name permutations.
     # When a name is succesfully sent a connection request, the other last name permutation searches are skiped.
     for lastName in lastNames :
-	sleep(random.uniform(MIN_DELAY, MAX_DELAY))
+        sleep(random.uniform(MIN_DELAY, MAX_DELAY))
         link = 'https://www.linkedin.com/search/results/people/?firstName=' + firstName + '&lastName=' + lastName + '&origin=FACETED_SEARCH&schoolFreetext=%22' + SCHOOL_NAME + '%22&sid=)k5'
         browser.get(link)
 
@@ -107,22 +111,24 @@ for name in names :
             browser.find_element_by_class_name(SEND_NOTE_BUTTON).click()
             
             # Monitoring
-            with open(SUCCESS_MONITOR, 'a') as succesfulConFile:
-                succesfulConFile.write(firstName + ' ' + lastNames[len(lastNames) - 1].replace('%20', ' ') + '\n')
-            succesfulConFile.close()
+            with open(MONITOR_FILE, 'a') as file:
+                file.write('SUCCESSFUL... ' + firstName + ' ' + lastNames[len(lastNames) - 1].replace('%20', ' ') + '....................' + str(datetime.now()) + '\n')
+            file.close()
             print('CONNECTED to:    ' + firstName)
-
+            numberSuccess = numberSuccess + 1
             # Moves to next name
             break
         except NoSuchElementException :
             # Since trying multiple last-name permutations
             if lastNames[len(lastNames) - 1] == lastName :
                 # Monitoring
+                with open(MONITOR_FILE, 'a') as file:
+                    file.write('    UNSUCCESSFUL... ' + firstName + ' ' + lastNames[len(lastNames) - 1].replace('%20', ' ') + '        ....................' + str(datetime.now()) + '\n')
+                file.close()
                 print('Did NOT connect to:    ' + firstName)
-                with open(UNSUCCESS_MONITOR, 'a') as unsuccesfulConFile:
-                    unsuccesfulConFile.write(firstName + ' ' + lastNames[len(lastNames) - 1].replace('%20', ' ') + '\n')
-                unsuccesfulConFile.close()
+                numberUnsuccess = numberUnsuccess + 1
 
 
 browser.close
 timeStamp('END')
+print(OUTRO_MSG)
