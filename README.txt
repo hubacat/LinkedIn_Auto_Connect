@@ -9,6 +9,7 @@ and sends them a Connection request with a personalized message.
 HOW TO USE:
 --------------------------------------------------------------------
 i) Download this repo.
+ii) Suggest changing TEMPORARILY your LinkedIn password.
 
 1) Download the chromium webdriver and establish a PATH to it (It can 
 	be found in this repo in selenium_drivers.)git .
