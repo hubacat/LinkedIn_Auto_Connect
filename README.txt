@@ -29,6 +29,8 @@ file under 'NAMES', and add the word 'done' at the end of the list.
 PASSWORD, and SCHOOL_NAME variables must be entered for the program to work as intended.
 
 5) Run the bot.py program.
--The program will sign into your LinkedIn profile, so you'll be notified to complete your potential two-step authentification, and then press ENTER.
+-The program will sign into your LinkedIn profile, so you'll be notified to complete your potential two-step authentification, and then press ENTER into the console.
 
-6)
+6) Finally, I suggest using the monitor.txt file to verify which connections where successful and unsuccessful. 
+*Unsuccessful connections can be due to two things, either your classmate doesn't have a LinkedIn profile, or the program didn't found him.
+*Successful connection can be a false-positive, a connection was made but with the wrong profile (estimation of this occuring: XXX% from a 400 student sample)
